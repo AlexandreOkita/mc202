@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "fila.h"
+#include "pilha.h"
+
+void distribuir_primeiras_cartas(p_jogador *jogadores, int num_jogadores, p_pilha baralho);
+
+int main(){
+    p_fila fila;
+    p_pilha baralho;
+    p_jogador dealer, jogador, *jogadores;
+    int num_cartas, num_jogadores, i;
+    char carta;
+    int carta_val;
+    char comando;
+
+
+    fila = criar_fila();
+    scanf("%d %d ", &num_cartas, &num_jogadores);
+    baralho = criar_pilha(num_cartas);
+    jogadores = malloc((num_jogadores+1)*sizeof(Jogador));
+    /*Insere as cartas no baralho*/
+    for (i=0; i<num_cartas; i++){
+        scanf("%c", &carta);
+        getchar();
+        if(carta == '1'){
+            scanf("%c", &carta);
+            carta = '0';
+        }
+        empilhar(baralho, carta);
+    }
+    /*Enfileira os jogadores*/
+    for (i=0; i<num_jogadores; i++){
+        jogadores[i] = criar_jogador();
+        enfileirar(fila, jogadores[i]);
+    }
+    dealer = criar_jogador();
+    jogadores[num_jogadores] = dealer;
+    enfileirar(fila, dealer);
+
+    distribuir_primeiras_cartas(jogadores, num_jogadores, baralho);
+
+    while (fila->ini != NULL){
+        if(fila->ini->dado->soma < 21){
+            scanf("%c", &comando);
+            if (comando == '#'){
+                break;
+            }
+            if ( comando == '\n') {
+                continue;
+            }
+            /*Checa se o jogador realizou um hit*/
+            if (comando == 'H'){
+                jogador = desenfileirar(fila);
+                carta = desempilhar(baralho);
+                carta_val = ler_carta(jogador, carta);
+                jogador = somar_cartas(jogador, carta_val);
+                if (jogador -> estado){
+                    enfileirar(fila, jogador);
+                }
+            }
+            else if (comando == 'S'){
+                jogador = desenfileirar(fila);
+            }
+            else {
+                empilhar(baralho, comando);
+            }
+        } else{
+            jogador = desenfileirar(fila);
+        }
+
+    }
+    for(i = 0; i<num_jogadores+1; i++)
+        printf("%d\n", jogadores[i]->soma);
+    return 0;
+}
+
+void distribuir_primeiras_cartas(p_jogador *jogadores, int num_jogadores, p_pilha baralho){
+    char carta;
+    int carta_val, i, j;
+    for (i=0; i<2; i++) {
+        for (j=0; j<(num_jogadores+1); j++){
+            carta = desempilhar(baralho);
+            carta_val = ler_carta(jogadores[j], carta);
+            jogadores[j]->soma += carta_val;
+            if (jogadores[j]->soma >= 21){
+                jogadores[j]->estado = 0;
+            }
+        }
+    }
+}
